@@ -1,6 +1,7 @@
 #ifndef _CLDC_COMMON_H
 #define _CLDC_COMMON_H
 
+/* for mixing c and c++ */
 #ifdef __cplusplus
 #  define BEGIN_C_DECLS extern "C" {
 #  define END_C_DECLS   }
@@ -17,6 +18,8 @@
 #include <sys/types.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
+#include <sys/socket.h>
+#include <sys/un.h>
 
 #if STDC_HEADERS
 #  include <stdio.h>
@@ -28,10 +31,6 @@
 
 #if HAVE_UNISTD_H
 #  include <unistd.h>
-#endif
-
-#if HAVE_PTHREAD_H
-#  include <pthread.h>
 #endif
 
 #if HAVE_MATH_H
@@ -50,9 +49,9 @@
 #  include <tcpd.h>
 #endif
 
+#include <arpa/inet.h>
 #include <netinet/in.h>
-#include <sys/socket.h>
-#include <sys/un.h>
+#include <signal.h>
 #include <netdb.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -60,6 +59,7 @@
 #include <getopt.h>
 #include <time.h>
 #include <assert.h>
+#include <pthread.h>
 
 #ifndef EXIT_SUCCESS
 #  define EXIT_SUCCESS  0

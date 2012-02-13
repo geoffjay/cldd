@@ -20,6 +20,7 @@
 
 #include <common.h>
 
+#include "cldd.h"
 #include "daemon.h"
 
 #include <grp.h>
@@ -83,11 +84,14 @@ daemonize_set_user (void)
     if (user_name == NULL)
         return;
 
+    /* technically not daemonized yet should consider replacing CLDD_ERROR
+     * with a call to err_sys */
+
     /* set gid */
     if (user_gid != (gid_t)-1 && user_gid != getgid ())
     {
         if (setgid (user_gid) == -1) {
-            CLDD_ERROR("cannot setgid to %d: %s",
+            CLDD_ERROR("Cannot setgid to %d: %s",
                        (int)user_gid, strerror (errno));
         }
     }
@@ -98,8 +102,8 @@ daemonize_set_user (void)
      */
     if (!had_group && initgroups (user_name, user_gid) == -1)
     {
-        fprintf (stderr, "cannot init supplementary groups "
-                         "of user \"%s\": %s",
+        fprintf (stderr, "Cannot init supplementary groups "
+                         "of user \"%s\": %s\n",
                          user_name, strerror (errno));
     }
 #endif
@@ -108,7 +112,7 @@ daemonize_set_user (void)
     if (user_uid != (uid_t)-1 && user_uid != getuid () &&
         setuid (user_uid) == -1)
     {
-        CLDD_ERROR("cannot change to uid of user \"%s\": %s",
+        CLDD_ERROR("Cannot change to uid of user \"%s\": %s",
                    user_name, strerror (errno));
     }
 }
@@ -151,7 +155,7 @@ daemonize_detach (void)
 
 #endif
 
-    fprintf (stderr, "daemonized!");
+    fprintf (stderr, "daemonized!\n");
 }
 
 void
@@ -159,11 +163,15 @@ daemonize (bool detach)
 {
     FILE *fp = NULL;
 
+    /* stdout/err is already closed by this point so we should
+     * be using syslog for errors */
+    daemonized = true;
+
     if (pidfile != NULL)
     {
         /* do this before daemon'izing so we can fail gracefully if we can't
          * write to the pid file */
-        fprintf (stderr, "opening pid file");
+        fprintf (stderr, "opening pid file\n");
         fp = fopen (pidfile, "w+");
         if (!fp)
         {
@@ -177,7 +185,7 @@ daemonize (bool detach)
 
     if (pidfile != NULL)
     {
-        fprintf (stderr, "writing pid file");
+        fprintf (stderr, "writing pid file\n");
         fprintf (fp, "%lu\n", (unsigned long)getpid ());
         fclose (fp);
     }
