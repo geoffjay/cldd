@@ -26,6 +26,8 @@
 BEGIN_C_DECLS
 
 struct options {
+    int  port;
+    char *log_filename;
     bool kill;
     bool daemon;
     bool verbose;

@@ -52,6 +52,7 @@ usage (char **argv)
             "Help Options:\n"
             "\t-h|?, --help\    show help options\n\n"
             "Application Options:\n"
+            "\t-p, --port       the port to use for the daemon\n"
             "\t-k, --kill       kill the currently running cldd session\n"
             "\t-d, --daemon     detach from the console\n"
             "\t-v, --verbose    verbose logging\n"
@@ -66,16 +67,23 @@ parse_cmdline (int argc, char **argv, struct options *options)
     int opt = 0;
     int opt_index = 0;
 
-    static const char * opt_string = "vdVkh?";
+    static const char * opt_string = ":vdp:l:Vkh?";
     static const struct option cmd_options[] = {
         /* options that set a flag */
-        { "verbose", no_argument, NULL, 'v' },
-        { "daemon",  no_argument, NULL, 'd' },
-        { "version", no_argument, NULL, 'V' },
-        { "kill",    no_argument, NULL, 'k' },
-        { "help",    no_argument, NULL, 'h' },
-        { NULL,      no_argument, NULL, 0   }
+        { "verbose", no_argument,       NULL, 'v' },
+        { "daemon",  no_argument,       NULL, 'd' },
+        { "port",    required_argument, NULL, 'p' },
+        { "logfile", required_argument, NULL, 'l' },
+        { "version", no_argument,       NULL, 'V' },
+        { "kill",    no_argument,       NULL, 'k' },
+        { "help",    no_argument,       NULL, 'h' },
+        { NULL,      no_argument,       NULL, 0   }
     };
+
+    /* set defaults */
+    options->port = 10000;
+    options->log_filename = malloc (sizeof (32));
+    strcpy (options->log_filename, "log.dat");
 
     /* should include error checking later */
 
@@ -90,12 +98,23 @@ parse_cmdline (int argc, char **argv, struct options *options)
             case 'd':
                 options->daemon = true;
                 break;
+            case 'p':
+                options->port = atoi (optarg);
+                break;
+            case 'l':
+                free (options->log_filename);
+                options->log_filename = malloc (sizeof (optarg));
+                strcpy (options->log_filename, optarg);
+                break;
             case 'V':
                 version ();
                 break;
             case 'k':
                 options->kill = true;
                 break;
+            case ':':   /* missing option argument */
+               fprintf (stderr, "%s: option `-%c' requires an argument\n",
+                        argv[0], optopt);
             case 'h':
             case '?':
                 usage (argv);
