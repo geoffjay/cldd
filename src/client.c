@@ -20,6 +20,7 @@
 
 #include <common.h>
 
+#include "cldd.h"
 #include "client.h"
 
 client *

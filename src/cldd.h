@@ -29,8 +29,12 @@ BEGIN_C_DECLS
 #include "cmdline.h"
 #include "server.h"
 
-#define MAXLINE     4096        /* max text line length */
-#define BACKLOG     1024
+#define MAXLINE         4096        /* max text line length */
+#define BACKLOG         1024
+#define EPOLL_QUEUE_LEN 256
+
+/* replace later with value taken from configuration file */
+#define PID_FILE    "/var/run/cldd.pid"
 
 /* replace later with value taken from configuration file */
 #define PID_FILE    "/var/run/cldd.pid"
