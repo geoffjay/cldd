@@ -33,13 +33,13 @@
 /* function prototypes */
 void signal_handler (int sig);
 void * client_manager (void *data);
-void * client_func (void *data);
 void read_fds (server *s);
 
 pthread_t master_thread;
 pthread_mutex_t master_lock = PTHREAD_MUTEX_INITIALIZER;
 
 struct options options;
+bool running = true;
 
 static void
 glue_daemonize_init (const struct options *options)
@@ -127,8 +127,8 @@ signal_handler (int sig)
             break;
     }
 
-    /* stop the thread responsible for client management */
-    pthread_cancel (master_thread);
+    /* condition to exit the main thread */
+    running = false;
 }
 
 /**
@@ -146,12 +146,6 @@ client_manager (void *data)
     struct sockaddr_in servaddr;
     node *link = NULL;
     client *c = NULL;
-    struct client_data_t cd;
-    struct client_data_t *pcd;
-
-    server *s = (server *)data;
-
-    ///
     node *n = NULL;
     ///
 
@@ -243,17 +237,17 @@ client_manager (void *data)
                                     ? s->n_clients : s->n_max_connected;
                 pthread_mutex_unlock (&s->server_data_lock);
 
-                cd.s = s;
-                cd.c = c;
-                pcd = &cd;
-                pthread_create (&c->tid, NULL, client_func, pcd);
-                CLDD_MESSAGE("Create client thread %ld", c->tid);
+            c = (client *)n->data;
+            FD_SET(c->fd, &s->fds);
+            if (c->fd > s->maxfd)
+                s->maxfd = c->fd;
+        }
 
-                pthread_mutex_lock (&s->server_data_lock);
-                s->client_list = llist_append (s->client_list, (void *)c);
-                CLDD_MESSAGE("Added client to list, new size: %d",
-                             llist_length (s->client_list));
-                pthread_mutex_unlock (&s->server_data_lock);
+        /* check for socket requests */
+        nready = select (s->maxfd + 1, &s->fds, NULL, NULL, NULL);
+
+        pthread_mutex_unlock (&s->data_lock);
+>>>>>>> 5534035... Working select implementation
 
                 continue;
             }
@@ -291,12 +285,12 @@ client_manager (void *data)
 void
 read_fds (server *s)
 {
+    int ret;
     client *c = NULL;
     node *n = NULL;
-    struct client_data_t cd;
-    struct client_data_t *pcd;
 
     /* check if a client is trying to connect */
+    ret = pthread_mutex_trylock (&s->data_lock);
     if (FD_ISSET(s->fd, &s->fds))
     {
         /* get the client data ready */
@@ -310,37 +304,24 @@ read_fds (server *s)
                      inet_ntoa (c->sa.sin_addr),
                      ntohs (c->sa.sin_port));
 
-        pthread_mutex_lock (&s->server_data_lock);
         s->n_clients++;
         s->n_max_connected = (s->n_clients > s->n_max_connected) ?
                               s->n_clients : s->n_max_connected;
-        pthread_mutex_unlock (&s->server_data_lock);
-
-        /* data for the client thread */
-        cd.s = s;
-        cd.c = c;
-        pcd = &cd;
-
-        /* launch the thread for the client */
-        pthread_mutex_lock (&c->lock);
-        pthread_create (&c->tid, NULL, client_func, pcd);
-        CLDD_MESSAGE("Created client thread %ld", c->tid);
 
         /* add the client data to the linked list */
-        pthread_mutex_lock (&s->server_data_lock);
         s->client_list = llist_append (s->client_list, (void *)c);
         CLDD_MESSAGE("Added client to list, new size: %d",
                      llist_length (s->client_list));
-        pthread_mutex_unlock (&s->server_data_lock);
-
         c = NULL;
     }
+    pthread_mutex_unlock (&s->data_lock);
 
     /* go through the available connections */
     for (n = s->client_list->link; n != NULL; n = n->next)
     {
-        pthread_mutex_lock (&s->server_data_lock);
         c = (client *)n->data;
+        /* process any request that caused an event */
+        pthread_mutex_trylock (&s->data_lock);
         if (FD_ISSET(c->fd, &s->fds))
         {
             /* unlock client thread condition variable */

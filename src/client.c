@@ -22,6 +22,10 @@
 
 #include "cldd.h"
 #include "client.h"
+#include "error.h"
+
+const char sendbuf[MAXLINE] =
+        "012345678901234567890123456789012345678901234567890123456789012\n";
 
 client *
 client_new (void)
