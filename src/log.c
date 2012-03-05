@@ -20,6 +20,11 @@
 
 #include <common.h>
 
+#include <glibtop.h>
+#include <glibtop/cpu.h>
+#include <glibtop/mem.h>
+#include <glibtop/proclist.h>
+
 #include "log.h"
 #include "cmdline.h"
 #include "error.h"
@@ -42,8 +47,10 @@ void log_init (server *s, struct options *options)
 
     s->log_filename = malloc (sizeof (options->log_filename));
     strcpy (s->log_filename, options->log_filename);
+
     /* don't need the options string anymore, free memory */
     free (options->log_filename);
+
     /* doesn't account for file overwrites, fix later */
     s->logging = true;
     sprintf (stats_filename, "stats.%d.log", getpid ());
@@ -115,7 +122,6 @@ void * logging_func (void *data)
             pthread_mutex_unlock (&log_timer_mutex);
             break;
         }
-
         pthread_mutex_unlock (&log_timer_mutex);
 
         /* refresh time for logging */
