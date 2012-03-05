@@ -43,7 +43,7 @@ struct _server {
     struct epoll_event events[EPOLL_QUEUE_LEN];
     struct epoll_event event;
     /* client management */
-    llist *client_list;
+    GList *client_list;
     /* data for threading */
     pthread_mutex_t data_lock;
     /* performance logging */
