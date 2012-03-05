@@ -49,13 +49,6 @@ glue_daemonize_init (const struct options *options)
         daemonize_kill ();
 }
 
-static void
-list_test_print (gpointer data)
-{
-    client *c = (client *)data;
-    CLDD_MESSAGE("Got client %d", c->fd);
-}
-
 int
 main (int argc, char **argv)
 {
@@ -174,8 +167,8 @@ client_manager (void *data)
     servaddr.sin_addr.s_addr = htonl (INADDR_ANY);
     servaddr.sin_port        = htons (s->port);
 
-    if (bind (s->fd, (struct sockaddr *) &servaddr, sizeof (servaddr)) < 0)
-        CLDD_ERROR("Failed to bind socket %ld", s->fd);
+    server *s = (server *)data;
+>>>>>>> 5964528... Modified select to use GList
 
     /* setup the socket for incoming connections */
     if (listen (s->fd, BACKLOG) < 0)
@@ -248,6 +241,7 @@ client_manager (void *data)
             FD_SET(c->fd, &s->fds);
             if (c->fd > s->maxfd)
                 s->maxfd = c->fd;
+            it = next;
         }
 
         /* check for socket requests */
@@ -294,7 +288,7 @@ read_fds (server *s)
 {
     int ret;
     client *c = NULL;
-    node *n = NULL;
+    GList *it, *next;
 
     /* check if a client is trying to connect */
     ret = pthread_mutex_trylock (&s->data_lock);
@@ -316,17 +310,20 @@ read_fds (server *s)
                               s->n_clients : s->n_max_connected;
 
         /* add the client data to the linked list */
-        s->client_list = llist_append (s->client_list, (void *)c);
+        s->client_list = g_list_append (s->client_list, (gpointer)c);
         CLDD_MESSAGE("Added client to list, new size: %d",
-                     llist_length (s->client_list));
+                     g_list_length (s->client_list));
         c = NULL;
     }
     pthread_mutex_unlock (&s->data_lock);
 
     /* go through the available connections */
-    for (n = s->client_list->link; n != NULL; n = n->next)
+    it = s->client_list;
+    while (it != NULL)
     {
-        c = (client *)n->data;
+        c = (client *)it->data;
+        next = g_list_next (it);
+
         /* process any request that caused an event */
         pthread_mutex_trylock (&s->data_lock);
         if (FD_ISSET(c->fd, &s->fds))
