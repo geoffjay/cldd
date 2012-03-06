@@ -51,7 +51,7 @@ void log_init (server *s, struct options *options)
     /* don't need the options string anymore, free memory */
     free (options->log_filename);
 
-    /* doesn't account for file overwrites, fix later */
+    /* these don't account for file overwrites, fix later */
     s->logging = true;
     sprintf (stats_filename, "stats.%d.log", getpid ());
     s->statsfp = fopen (stats_filename, "w");

@@ -43,7 +43,7 @@ client_compare (const void * _a, const void * _b)
     const client *a = (const client *) _a;
     const client *b = (const client *) _b;
 
-    if (a->fd == b->fd)
+    if (a->fd_mgmt == b->fd_mgmt)
         return true;
     else
         return false;

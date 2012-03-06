@@ -32,18 +32,17 @@ extern const char sendbuf[MAXLINE];
 typedef struct _client client;
 
 struct _client {
-    int fd;
-    pthread_t tid;
-    pthread_mutex_t msg_lock;
-    pthread_cond_t msg_ready;
-    char *msg;
-    bool msg_pending;
-    struct sockaddr_in sa;
+    int fd_mgmt;
+    int fd_strm;
+//    struct sockaddr_in sa;
+    struct sockaddr sa;
     socklen_t sa_len;
-    bool quit;
+    char hbuf[NI_MAXHOST];
+    char sbuf[NI_MAXSERV];
     /* for stats logging */
     int nreq;
     int ntot;
+    bool quit;
 };
 
 client * client_new (void);

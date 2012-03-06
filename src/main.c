@@ -33,7 +33,7 @@
 /* function prototypes */
 void signal_handler (int sig);
 void * client_manager (void *data);
-void read_fds (server *s);
+void process_events (server *s);
 
 pthread_t master_thread;
 pthread_mutex_t master_lock = PTHREAD_MUTEX_INITIALIZER;
@@ -129,6 +129,7 @@ signal_handler (int sig)
 
     /* condition to exit the main thread */
     running = false;
+    pthread_cancel (master_thread);
 }
 
 /**
@@ -174,16 +175,8 @@ client_manager (void *data)
     if (listen (s->fd, BACKLOG) < 0)
         CLDD_ERROR("Unable to listen on socket %ld", s->fd);
 
-    /* reate the epoll file descriptor */
-    s->epoll_fd = epoll_create (EPOLL_QUEUE_LEN);
-    if (s->epoll_fd == -1)
-        CLDD_ERROR("epoll_create() error");
-
-    /* Add the server socket to the epoll event loop */
-    s->event.events = EPOLLIN | EPOLLERR | EPOLLHUP | EPOLLET;
-    s->event.data.fd = s->fd;
-    if (epoll_ctl (s->epoll_fd, EPOLL_CTL_ADD, s->fd, &s->event) == -1)
-        CLDD_ERROR("epoll_ctl() error");
+    /* set the server up to use epoll */
+    server_init_epoll (s);
 
     for (;;)
     {
@@ -350,30 +343,30 @@ void *
 client_func (void *data)
 {
     ssize_t n;
-    /* this is hokey and only for the test, but a 64kB block will be sent
-     * to the client 16 times making 1kB sent in total */
-    char send[MAXLINE] =
-        "012345678901234567890123456789012345678901234567890123456789012\n";
-    client *c = (client *)((struct client_data_t *)data)->c;
-    server *s = (server *)((struct client_data_t *)data)->s;
 
-    CLDD_MESSAGE("Entering client loop - sock fd = %d", c->fd);
-    for (;;)
-    {
-        /* wait for a new message */
-        pthread_mutex_lock (&c->msg_lock);
-        /* if any client requests were made spawn a new thread */
-        while (!c->msg_pending)
-            pthread_cond_wait (&c->msg_ready, &c->msg_lock);
+                close (c->fd);
+                client_free (c);
+                c = NULL;
+            }
+=======
+            /* check if the client is pending quit */
+            if (c->quit)
+            {
+                pthread_mutex_trylock (&s->data_lock);
+                s->n_clients--;
+                s->client_list = g_list_delete_link (s->client_list, it);
+                CLDD_MESSAGE("Removed client from list, new size: %d",
+                             g_list_length (s->client_list));
+                /* log the client stats before closing it */
+                fprintf (s->statsfp, "%s, %d, %d, %d\n",
+                         c->hbuf, c->fd_mgmt, c->nreq, c->ntot);
+                pthread_mutex_unlock (&s->data_lock);
 
-        /* a request message received from the client triggers a write */
-        if (strcmp (c->msg, "request\n") == 0)
-        {
-            if ((n = writen (c->fd, send, strlen (send))) != strlen (send))
-                CLDD_MESSAGE("Client write error - %d != %d", strlen (send), n);
-            pthread_mutex_unlock (&master_lock);
-            c->nreq++;
-            c->ntot += n;
+                close (c->fd_mgmt);
+                client_free (c);
+                c = NULL;
+            }
+>>>>>>> bf9f481... Updated calls for server setup
         }
         else if (strcmp (c->msg, "quit\n") == 0)
         {
