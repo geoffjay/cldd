@@ -23,14 +23,17 @@
 #include "cldd.h"
 #include "client.h"
 #include "error.h"
+#include "stream.h"
 
-const char sendbuf[MAXLINE] =
+/* this was just for testing */
+const gchar sendbuf[MAXLINE] =
         "012345678901234567890123456789012345678901234567890123456789012\n";
 
 client *
 client_new (void)
 {
-    client *c = malloc (sizeof (client));
+    client *c = g_malloc (sizeof (client));
+
     c->ntot = 0;
     c->nreq = 0;
     c->quit = false;
@@ -43,6 +46,7 @@ client_compare (const void * _a, const void * _b)
     const client *a = (const client *) _a;
     const client *b = (const client *) _b;
 
+    /* there should never be two clients with the same socket descriptor */
     if (a->fd_mgmt == b->fd_mgmt)
         return true;
     else

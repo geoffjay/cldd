@@ -28,12 +28,13 @@
 #include "error.h"
 #include "log.h"
 #include "server.h"
+#include "stream.h"
 #include "utils.h"
 
 /* function prototypes */
 void signal_handler (int sig);
 void * client_manager (void *data);
-void process_events (server *s);
+static void process_events (server *s);
 
 pthread_t master_thread;
 pthread_mutex_t master_lock = PTHREAD_MUTEX_INITIALIZER;
@@ -129,7 +130,8 @@ signal_handler (int sig)
 
     /* condition to exit the main thread */
     running = false;
-    pthread_cancel (master_thread);
+    pthread_join (master_thread, NULL);
+//    pthread_cancel (master_thread);
 }
 
 /**
@@ -361,6 +363,8 @@ client_func (void *data)
                 fprintf (s->statsfp, "%s, %d, %d, %d\n",
                          c->hbuf, c->fd_mgmt, c->nreq, c->ntot);
                 pthread_mutex_unlock (&s->data_lock);
+
+                stream_close (c->stream);
 
                 close (c->fd_mgmt);
                 client_free (c);
