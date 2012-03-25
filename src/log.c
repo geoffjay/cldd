@@ -69,7 +69,7 @@ setup_log_output (server *s)
     GError *error;
 
     /* launch logging thread */
-    log_task = g_thread_create ((GThreadFunc)log_task,
+    log_task = g_thread_create ((GThreadFunc)log_thread,
                                (gpointer)s, true, &error);
 }
 
