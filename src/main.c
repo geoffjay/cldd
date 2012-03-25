@@ -33,11 +33,11 @@
 
 /* function prototypes */
 void signal_handler (int sig);
-void * client_manager (void *data);
+void * client_manager (gpointer data);
 static void process_events (server *s);
 
-pthread_t master_thread;
-pthread_mutex_t master_lock = PTHREAD_MUTEX_INITIALIZER;
+GMainLoop *main_loop;
+GThread *main_task;
 
 struct options options;
 bool running = true;
@@ -55,6 +55,7 @@ main (int argc, char **argv)
 {
     int ret;
     bool success;
+    GError *error;
     server *s;
 
     if (argc == 1)
@@ -77,22 +78,26 @@ main (int argc, char **argv)
     daemonize_close_stdin ();
 
     glue_daemonize_init (&options);
-    log_init (s, &options);
+//    log_init (s, &options);
 
     daemonize_set_user ();
 
     /* passing true starts daemon in detached mode */
     daemonize (options.daemon);
-    setup_log_output (s);
+//    setup_log_output (s);
 
     /* start the master thread for client management */
-    ret = pthread_create (&master_thread, NULL, client_manager, s);
-    if (ret != 0)
-        CLDD_ERROR("Unable to create client management thread");
-    pthread_join (master_thread, NULL);
+    main_task = g_thread_create ((GThreadFunc)client_manager,
+                                 (gpointer)s, true, &error);
+
+    /* enter the main loop */
+    main_loop = g_main_loop_new (NULL, false);
+    g_main_loop_run (main_loop);
+    g_thread_join (main_task);
+    g_main_loop_unref (main_loop);
 
     daemonize_finish ();
-    close_log_files (s);
+//    close_log_files (s);
 
     /* clean up */
     server_free (s);
@@ -116,22 +121,20 @@ signal_handler (int sig)
     {
         case SIGHUP:
             syslog (LOG_WARNING, "Received SIGHUP signal.");
+            /* use this to restart - later */
             break;
         case SIGTERM:
             syslog (LOG_WARNING, "Received SIGTERM signal.");
+            running = false;
             break;
         case SIGINT:
             syslog (LOG_WARNING, "Received SIGINT signal.");
+            running = false;
             break;
         default:
             syslog (LOG_WARNING, "Unhandled signal (%d) %s", strsignal(sig));
             break;
     }
-
-    /* condition to exit the main thread */
-    running = false;
-    pthread_join (master_thread, NULL);
-//    pthread_cancel (master_thread);
 }
 
 /**
@@ -142,7 +145,7 @@ signal_handler (int sig)
  * @param data Thread data for the function
  */
 void *
-client_manager (void *data)
+client_manager (gpointer data)
 {
     int i, n, ret, nready;
     const int on = 1;
@@ -261,18 +264,22 @@ client_manager (void *data)
             }
 
             /* read messages from client */
-            n = readline (s->events[i].data.fd, c->msg, MAXLINE);
-            if (n != 0)
-                c->msg_pending = true;
-        }
-
-        c = NULL;
+        else if (s->num_fds == 0)
+            continue;
+        else
+            /* data is available on one or more sockets */
+            process_events (s);
+>>>>>>> 8d223d3... Mostly functional output stream
     }
 
     CLDD_MESSAGE("Exiting the client manager");
+
+    /* close all clients */
+    server_close_clients (s);
     close (s->fd);
 
-    pthread_exit (NULL);
+    g_main_loop_quit (main_loop);
+    g_thread_exit (NULL);
 }
 
 /**
@@ -354,17 +361,18 @@ client_func (void *data)
             /* check if the client is pending quit */
             if (c->quit)
             {
-                pthread_mutex_trylock (&s->data_lock);
+                g_mutex_trylock (s->data_lock);
                 s->n_clients--;
                 s->client_list = g_list_delete_link (s->client_list, it);
                 CLDD_MESSAGE("Removed client from list, new size: %d",
                              g_list_length (s->client_list));
                 /* log the client stats before closing it */
-                fprintf (s->statsfp, "%s, %d, %d, %d\n",
-                         c->hbuf, c->fd_mgmt, c->nreq, c->ntot);
-                pthread_mutex_unlock (&s->data_lock);
+                //fprintf (s->statsfp, "%s, %d, %d, %d\n",
+                //         c->hbuf, c->fd_mgmt, c->nreq, c->ntot);
+                g_mutex_unlock (s->data_lock);
 
-                stream_close (c->stream);
+                if (c->stream->open)
+                    stream_close (c->stream);
 
                 close (c->fd_mgmt);
                 client_free (c);
