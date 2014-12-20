@@ -34,7 +34,7 @@ cldd_headers = \
 	libcldd.h
 
 cldd_SOURCES = \
-	cldd.vala \
+	main.vala \
 	config.vala \
 	daemon.vala \
 	settings.vala

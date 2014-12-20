@@ -1,23 +1,13 @@
-dnl ---------------------------------------------------------------------------
 dnl Process this file with autoconf to produce a configure script.
-dnl ---------------------------------------------------------------------------
 
+AC_PREREQ([2.64])
 AC_INIT([cldd], [0.1])
-AC_CONFIG_MACRO_DIR([m4])
-AC_CONFIG_SRCDIR([src/cldd.vala])
 
-AM_INIT_AUTOMAKE([foreign no-dist-gzip dist-xz])
+AC_CONFIG_SRCDIR([src/main.vala])
 AC_CONFIG_HEADERS([config.h])
-AM_MAINTAINER_MODE
+AC_CONFIG_MACRO_DIR([m4])
 
-dnl Enable silent rules is available
-m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
-
-AC_DEFINE(VERSION, "0.1", "cldd")
-
-dnl ---------------------------------------------------------------------------
 dnl Programs
-dnl ---------------------------------------------------------------------------
 AC_PROG_CC
 AM_PROG_CC_STDC
 AM_PROG_VALAC([0.14.0])
@@ -25,9 +15,15 @@ AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_MAKE_SET
 
-dnl --------------------------------------------------------------------------
+AM_INIT_AUTOMAKE([foreign no-dist-gzip dist-xz])
+AM_MAINTAINER_MODE([enable])
+
+dnl Enable silent rules is available
+m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
+
+AC_DEFINE(VERSION, "0.1", "cldd")
+
 dnl Declare variables
-dnl --------------------------------------------------------------------------
 AC_SUBST(PACKAGE_CFLAGS)
 AC_SUBST(PACKAGE_LIBS)
 PACKAGE_CFLAGS=""
@@ -45,9 +41,7 @@ AC_DEFINE_UNQUOTED(DATADIR, "$SYSCONFDIR/$PACKAGE",
 dnl Library checks
 VALA_PACKAGES=""
 
-dnl ---------------------------------------------------------------------------
 dnl Headers/Libraries
-dnl ---------------------------------------------------------------------------
 PKG_CHECK_MODULES([GLIB], [glib-2.0],,
     [AC_MSG_ERROR([glib2 is required])])
 
@@ -96,10 +90,7 @@ AC_HEADER_STDC
 AC_CHECK_HEADERS([stdlib.h])
 AC_CHECK_HEADERS([valgrind/memcheck.h])
 
-dnl --------------------------------------------------------------------------
 dnl Build options.
-dnl --------------------------------------------------------------------------
-
 AC_ARG_WITH([distro],
 	[AS_HELP_STRING([--with-distro],
 					[Configure for a specific distribution (supported values: generic, redhat, suse, debian, gentoo, slackware; default is to autodetect)])],
@@ -117,10 +108,8 @@ test -z $INITDIR && INITDIR="$sysconfdir/init.d"
 AC_SUBST(DISTRO)
 AC_SUBST(INITDIR)
 
-dnl --------------------------------------------------------------------------
 dnl check which distribution we're running on in order to correctly handle
 dnl installation of the init.d/rc.d script
-dnl --------------------------------------------------------------------------
 if test -z $DISTRO; then
 	AC_CHECK_FILE(/etc/arch-release,   [DISTRO="arch"])
 	AC_CHECK_FILE(/etc/gentoo-release, [DISTRO="gentoo"])
@@ -147,17 +136,13 @@ case "$DISTRO" in
 		;;
 esac
 
-dnl ---------------------------------------------------------------------------
 dnl Allow tools to be specifically built
-dnl ---------------------------------------------------------------------------
 AC_ARG_ENABLE(debug,
 	AS_HELP_STRING([--enable-debug],
 		[enable debugging (default: disabled)]),,
 	[enable_debug=no])
 
-dnl ---------------------------------------------------------------------------
 dnl Additional build flags
-dnl ---------------------------------------------------------------------------
 AS_IF([test "x$GCC" != "xno"],
       [CC_CHECK_FLAG([-Wall])]
       [CC_CHECK_FLAG([-Wextra])]
@@ -170,9 +155,7 @@ AS_IF([test "x$GCC" != "xno"],
       [CC_CHECK_FLAG([-Wwrite-strings])]
       [CC_CHECK_FLAG([-pedantic])])
 
-dnl ---------------------------------------------------------------------------
 dnl Generate files
-dnl ---------------------------------------------------------------------------
 AC_CONFIG_FILES([
 	Makefile
     data/Makefile
@@ -184,32 +167,25 @@ AC_CONFIG_FILES([
 ])
 AC_OUTPUT
 
-dnl ---------------------------------------------------------------------------
 dnl Build report
-dnl ---------------------------------------------------------------------------
-echo
-echo "$PACKAGE ($VERSION)"
-echo
-echo "----------------------------------------------------------------"
-echo
-echo "Prefix....................... : $ac_default_prefix"
-echo "System configuration......... : $sysconfdir"
-echo "Data directory............... : $datadir"
-echo "Package configuration........ : $pkgconfigdir"
-echo
-echo "----------------------------------------------------------------"
-echo
-echo "Debugging enabled............ : $enable_debug"
-echo
-echo "----------------------------------------------------------------"
-echo
-echo "Comedi support............... : $with_comedi"
-dnl echo "MCCUSB support............... : $with_mccusb"
-dnl echo "TS4700 support............... : $with_ts4700"
-dnl echo "TS4800 support............... : $with_ts4800"
-echo
-echo "----------------------------------------------------------------"
-echo
-eval eval echo $PACKAGE will be installed in $bindir
-echo
-echo 'configure is complete, type "make" to begin.'
+AC_MSG_NOTICE([
+
+    $PACKAGE $VERSION
+    =============
+
+    Prefix:                         ${ac_default_prefix}
+    System configuration:           ${sysconfdir}
+    Data directory:                 ${datadir}
+    Package configuration:          ${pkgconfigdir}
+    Compiler:                       ${CC}
+    CFLAGS:                         ${CFLAGS}
+    VALAFLAGS:                      ${VALAFLAGS}
+
+    Debugging enabled:              $enable_debug
+
+    Comedi support:                 $with_comedi
+
+    $PACKAGE will be installed in $bindir
+
+    configure is complete, type "make" to begin.
+])
