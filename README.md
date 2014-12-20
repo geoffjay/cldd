@@ -11,10 +11,13 @@ feedback control using a simple PID algorithm.
 Building
 --------
 
-This uses ZeroMQ for which the vapi needs to be installed manually.
+This uses ZeroMQ for which the vapi needs to be installed manually. The vapi
+files come from the zmq-vala repository that has been added as a submodule, to
+update the repository with all submodules do:
 
 ```
-git clone https://github.com/geoffjay/zmq-vapi
+git submodule init
+git submodule update
 VER=`valac --version | sed 's/^.*\([0-9]\.[0-9][0-9]\).*$/\1/'`
-sudo cp zmq-vapi/libzmq.{deps,vapi} /usr/share/vala-$VER/vapi/
+sudo cp vapi/zmq-vala/libzmq.{deps,vapi} /usr/share/vala-$VER/vapi/
 ```

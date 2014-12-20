@@ -1,0 +1,3 @@
+[submodule "vapi/zmq-vala"]
+	path = vapi/zmq-vala
+	url = https://github.com/geoffjay/zmq-vala
