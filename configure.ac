@@ -1,35 +1,41 @@
 dnl Process this file with autoconf to produce a configure script.
-
 AC_PREREQ([2.64])
-AC_INIT([cldd], [0.1])
+AC_INIT([cldd], m4_esyscmd([build-aux/git-version-gen .tarball-version]))
 
-AC_CONFIG_SRCDIR([src/main.vala])
+AC_CONFIG_AUX_DIR([build-aux])
+AC_CONFIG_SRCDIR([src/libcldd/cldd-client.vala])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
 
 dnl Programs
 AC_PROG_CC
 AM_PROG_CC_STDC
-AM_PROG_VALAC([0.14.0])
+AM_PROG_VALAC([0.22.0])
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_MAKE_SET
+AC_HEADER_STDC
 
-AM_INIT_AUTOMAKE([foreign no-dist-gzip dist-xz])
+AC_SUBST(abs_top_builddir)
+AC_SUBST(VERSION)
+
+# Initialize automake
+AM_INIT_AUTOMAKE([1.11.1 foreign no-dist-gzip dist-xz -Wno-portability])
 AM_MAINTAINER_MODE([enable])
+
+dnl Initialize libtool - disable generation of static libraries
+LT_PREREQ([2.2.6])
+LT_INIT([dlopen disable-static])
+
+GOBJECT_INTROSPECTION_REQUIRE([1.33.4])
 
 dnl Enable silent rules is available
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
-AC_DEFINE(VERSION, "0.1", "cldd")
-
-dnl Declare variables
-AC_SUBST(PACKAGE_CFLAGS)
-AC_SUBST(PACKAGE_LIBS)
-PACKAGE_CFLAGS=""
-PACKAGE_LIBS=""
-
 AC_SET_DEFAULT_PATHS_SYSTEM
+
+PREFIX=$prefix
+AC_SUBST(PREFIX)
 
 SYSCONFDIR="$ac_default_prefix/etc"
 AC_SUBST(SYSCONFDIR)
@@ -163,6 +169,9 @@ AC_CONFIG_FILES([
     data/rc.d/Makefile
     man/Makefile
 	src/Makefile
+	src/cldd/Makefile
+	src/libcldd/Makefile
+	src/plugins/Makefile
 	vapi/Makefile
 ])
 AC_OUTPUT

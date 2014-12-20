@@ -25,7 +25,6 @@ src/cldd_vala.stamp
 *.h
 
 # executables
-src/cldd
 tests/test-rt
 
 # auto generated directory excludes

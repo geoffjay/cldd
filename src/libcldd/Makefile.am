@@ -1,0 +1,1 @@
+include $(srcdir)/filelist.am
