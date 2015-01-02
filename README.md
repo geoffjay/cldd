@@ -18,6 +18,4 @@ update the repository with all submodules do:
 ```
 git submodule init
 git submodule update
-VER=`valac --version | sed 's/^.*\([0-9]\.[0-9][0-9]\).*$/\1/'`
-sudo cp vapi/zmq-vala/libzmq.{deps,vapi} /usr/share/vala-$VER/vapi/
 ```

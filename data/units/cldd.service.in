@@ -1,0 +1,20 @@
+[Unit]
+Description=Control logging and interface daemon
+Requires=cldd_ro.socket cldd_rw.socket
+
+[Service]
+Type=notify
+
+# Example of what you can do in order to support
+# legacy daemons and be compatible with both Debian and RPM based
+# systems.
+EnvironmentFile=-/etc/default/cldd
+EnvironmentFile=-/etc/sysconfig/cldd
+
+# Available deamons: cldd_dynamic and cldd_regular
+Environment=CLDD=cldd_dynamic
+ExecStart=/bin/sh -c "exec @BINDIR@/$CLDD"
+
+[Install]
+WantedBy=multi-user.target
+Also=cldd_ro.socket cldd_rw.socket

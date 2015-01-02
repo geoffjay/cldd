@@ -1,11 +1,22 @@
 # file excludes
 *~
+*.c
 *.o
+*.lo
+*.la
 *.swp
+*.stamp*
+
+.deps/
+.dirstamp
+.version
 
 # auto generated file excludes
 Makefile
 Makefile.in
+aclocal.m4
+autom4te.cache/
+cldd-core-0.1.pc
 compile
 config.guess
 config.h
@@ -16,18 +27,28 @@ config.sub
 configure
 depcomp
 install-sh
+libtool
+ltmain.sh
 missing
 stamp-h1
-src/cldd_vala.stamp
+mkinstalldirs
 
-# auto generated source files
-*.c
-*.h
+build-aux/compile
+build-aux/py-compile
 
-# executables
-tests/test-rt
+m4/intltool.m4
+m4/libtool.m4
+m4/ltoptions.m4
+m4/ltsugar.m4
+m4/ltversion.m4
+m4/lt~obsolete.m4
 
-# auto generated directory excludes
-autom4te.cache/
-src/.deps
-tests/.deps
+src/libcldd-core/ClddCore-0.3.gir
+src/libcldd-core/ClddCore-0.3.typelib
+src/libcldd-core/cldd-core-0.3.vapi
+src/libcldd-core/cldd-core.h
+
+src/plugins/.deps/
+src/plugins/.dirstamp
+src/plugins/*/*.plugin
+src/plugins/*/.libs/

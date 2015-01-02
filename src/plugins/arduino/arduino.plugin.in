@@ -1,0 +1,7 @@
+[Plugin]
+Version = @VERSION@
+Module = arduino
+Name = Arduino
+License = LGPL
+Description = Implementation of the Arduino specification
+Copyright = Copyright © Cldd maintainers

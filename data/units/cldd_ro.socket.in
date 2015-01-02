@@ -1,0 +1,7 @@
+[Socket]
+ListenStream=@RUNDIR@/cldd/socket_ro
+SocketMode=0400
+Service=cldd.service
+
+[Install]
+WantedBy=sockets.target

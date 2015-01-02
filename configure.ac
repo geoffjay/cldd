@@ -3,11 +3,10 @@ AC_PREREQ([2.64])
 AC_INIT([cldd], m4_esyscmd([build-aux/git-version-gen .tarball-version]))
 
 AC_CONFIG_AUX_DIR([build-aux])
-AC_CONFIG_SRCDIR([src/libcldd/cldd-client.vala])
+AC_CONFIG_SRCDIR([src/libcldd-core/cldd-client.vala])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
 
-dnl Programs
 AC_PROG_CC
 AM_PROG_CC_STDC
 AM_PROG_VALAC([0.22.0])
@@ -32,6 +31,8 @@ GOBJECT_INTROSPECTION_REQUIRE([1.33.4])
 dnl Enable silent rules is available
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
+AC_SUBST(VERSION)
+
 AC_SET_DEFAULT_PATHS_SYSTEM
 
 PREFIX=$prefix
@@ -45,108 +46,76 @@ AC_DEFINE_UNQUOTED(DATADIR, "$SYSCONFDIR/$PACKAGE",
                    [Define the architecture-independent data directory.])
 
 dnl Library checks
-VALA_PACKAGES=""
+VALAFLAGS="--enable-deprecated --target-glib=2.32 $VALAFLAGS"
 
-dnl Headers/Libraries
-PKG_CHECK_MODULES([GLIB], [glib-2.0],,
-    [AC_MSG_ERROR([glib2 is required])])
+CLDD_BASE_MODULES="gee-0.8 libxml-2.0 cld-0.3 libzmq"
+CLDD_BASE_MODULES_VALAFLAGS="--pkg gee-0.8 --pkg libxml-2.0 --pkg cld-0.3 --pkg libzmq"
 
-AC_ARG_WITH(gee08, AS_HELP_STRING([--with-gee08], [Use libgee-0.8]), [with_gee08=yes], [with_gee08=no])
-AS_IF([test "x$with_gee08" != "xno"],
-      [AC_DEFINE(WITH_GEE_08, [1], ["Using libgee-0.8"])]
-      [PKG_CHECK_MODULES([GEE], [gee-0.8], [VALA_PACKAGES="$VALA_PACKAGES --pkg gee-0.8"],
-                         [AC_MSG_ERROR([libgee-0.8 is required])])])
+PKG_CHECK_MODULES([LIBCLDD_CORE_DEPS], [$CLDD_BASE_MODULES gio-2.0 gmodule-2.0])
+LIBCLDD_CORE_DEPS_VALAFLAGS="$CLDD_BASE_MODULES_VALAFLAGS --pkg gio-2.0 --pkg gmodule-2.0"
+AC_SUBST([LIBCLDD_CORE_DEPS_VALAFLAGS])
 
-dnl This may be more aptly named gee06
-AC_ARG_WITH(gee10, AS_HELP_STRING([--with-gee10], [Use libgee-1.0]), [with_gee10=yes], [with_gee10=no])
-AS_IF([test "x$with_gee10" != "xno"],
-      [AC_DEFINE(WITH_GEE_10, [1], ["Using libgee-1.0"])]
-      [PKG_CHECK_MODULES([GEE], [gee-1.0], [VALA_PACKAGES="$VALA_PACKAGES --pkg gee-1.0"],
-                         [AC_MSG_ERROR([libgee-1.0 is required])])])
+CLDD_PLUGIN_COMMON_VALAFLAGS="$LIBCLDD_CORE_DEPS_VALAFLAGS"
+AC_SUBST([CLDD_PLUGIN_COMMON_VALAFLAGS])
 
-PKG_CHECK_MODULES([GIO], [gio-2.0],
-    [VALA_PACKAGES="$VALA_PACKAGES --pkg gio-2.0"],
-    [AC_MSG_ERROR([gio-2.0 is required])])
+CLDD_COMMON_MODULES="$CLDD_BASE_MODULES"
+CLDD_COMMON_MODULES_VALAFLAGS="$CLDD_BASE_MODULES_VALAFLAGS"
+AC_SUBST([CLDD_COMMON_MODULES_VALAFLAGS])
 
-PKG_CHECK_MODULES([CLD], [cld-0.2],
-    [VALA_PACKAGES="$VALA_PACKAGES --pkg cld-0.2"],
-    [AC_MSG_ERROR([cld-0.2 is required])])
-
-PKG_CHECK_MODULES([XML], [libxml-2.0],
-    [VALA_PACKAGES="$VALA_PACKAGES --pkg libxml-2.0"],
-    [AC_MSG_ERROR([libxml-2.0 is required])])
-
-PKG_CHECK_MODULES([ZMQ], [libzmq],
-    [VALA_PACKAGES="$VALA_PACKAGES --pkg libzmq"],
-    [AC_MSG_ERROR([libzmq is required])])
-
-dnl Comedi
-AC_ARG_WITH(comedi, AS_HELP_STRING([--with-comedi], [Use Comedi drivers]), [with_comedi=yes], [with_comedi=no])
-AS_IF([test "x$with_comedi" != "xno"],
-      [AC_DEFINE(USE_COMEDI, [1], ["Comedi drivers"])]
-      [PKG_CHECK_MODULES([COMEDI], [comedi],
-                         [VALA_PACKAGES="$VALA_PACKAGES --pkg comedi"],
-                         [AC_MSG_ERROR([Comedi is required])])])
-
-dnl Package setup for Vala files
-AC_SUBST(VALA_PACKAGES)
+PKG_CHECK_MODULES([CLDD_DEPS], [$CLDD_COMMON_MODULES gio-2.0 gmodule-2.0])
+CLDD_DEPS_VALAFLAGS="$CLDD_COMMON_MODULES_VALAFLAGS --pkg gio-2.0 --pkg gmodule-2.0"
+AC_SUBST([CLDD_DEPS_VALAFLAGS])
 
 dnl Header checks
 AC_HEADER_STDC
 AC_CHECK_HEADERS([stdlib.h])
 AC_CHECK_HEADERS([valgrind/memcheck.h])
 
-dnl Build options.
-AC_ARG_WITH([distro],
-	[AS_HELP_STRING([--with-distro],
-					[Configure for a specific distribution (supported values: generic, redhat, suse, debian, gentoo, slackware; default is to autodetect)])],
-	[DISTRO=$withval])
-AC_ARG_WITH([initdir],
-	[AS_HELP_STRING([--with-initdir],
-					[Override directory for init scripts (default is distribution-specific)])],
-	[INITDIR=$withval])
+m4_include([m4/features.m4])
+m4_include([m4/systemd.m4])
 
-dnl INITDIR may be set with --with-initdir, or set in the distro
-dnl detection magic above. If unset down to here, use a sensible
-dnl default.
-test -z $INITDIR && INITDIR="$sysconfdir/init.d"
+AX_AVAILABLE_SYSTEMD()
 
-AC_SUBST(DISTRO)
-AC_SUBST(INITDIR)
+dnl Check if Comedi support was requested
+dnl XXX This shouldn't be required, libcld should be responsible for including it.
+AC_ARG_WITH(comedi,
+    AS_HELP_STRING([--without-comedi], [Do not build with Comedi support]),
+    [try_comedi=$withval], [try_comedi=yes])
 
-dnl check which distribution we're running on in order to correctly handle
-dnl installation of the init.d/rc.d script
-if test -z $DISTRO; then
-	AC_CHECK_FILE(/etc/arch-release,   [DISTRO="arch"])
-	AC_CHECK_FILE(/etc/gentoo-release, [DISTRO="gentoo"])
-	AC_CHECK_FILE(/etc/redhat-release, [DISTRO="redhat"])
-	AC_CHECK_FILE(/etc/debian_version, [DISTRO="debian"])
-fi
-case "$DISTRO" in
-	arch)
-		AC_MSG_NOTICE([configured for Arch.])
-		;;
-	gentoo)
-		AC_MSG_NOTICE([configured for Gentoo.])
-		;;
-	redhat)
-		test -z $INITDIR && INITDIR="$sysconfdir/rc.d/init.d"
-		AC_MSG_NOTICE([configured for Red Hat (includes Fedora, RHEL, CentOS).])
-		;;
-	debian)
-		AC_MSG_NOTICE([configured for Debian (includes Ubuntu).])
-		;;
-	"")
-		AC_MSG_WARN([Unable to determine what distribution we are running on.
-					 Distribution-specific features will be disabled.])
-		;;
-esac
+HAVE_COMEDI=no
+AS_IF([test "x$try_comedi" = "xyes"],
+      [PKG_CHECK_MODULES([CLDD_COMEDI_DEPS], [comedi],
+        [
+           CLDD_CHECK_PACKAGES([comedi], [HAVE_COMEDI=yes])
+           CLDD_COMEDI_DEPS_VALAFLAGS="--pkg comedi"
+           CLDD_PLUGIN_COMMON_VALAFLAGS="$CLDD_PLUGIN_COMMON_VALAFLAGS $CLDD_COMEDI_DEPS_VALAFLAGS"
+           AC_SUBST([CLDD_COMEDI_DEPS_VALAFLAGS])
+        ],
+        [
+          AC_MSG_WARN([Comedi dependencies not found.])
+          AC_MSG_WARN([Comedi support will not be built.])
+        ])])
 
-dnl Allow tools to be specifically built
+dnl Build plugin support
+CLDD_ADD_PLUGIN([arduino],[Arduino plugin],[yes])
+AS_IF([test "x$enable_arduino_plugin" = "xyes"],
+  [
+    PKG_CHECK_MODULES([CLDD_PLUGIN_ARDUINO_DEPS],
+                      [$CLDD_COMMON_MODULES])
+  ])
+
+dnl Build options
 AC_ARG_ENABLE(debug,
-	AS_HELP_STRING([--enable-debug],
-		[enable debugging (default: disabled)]),,
-	[enable_debug=no])
+    AS_HELP_STRING([--enable-debug],[Enable debugging (default: disabled)]),,
+        [enable_debug=no])
+AS_IF([test "x$enable_debug" != "xno"],
+      [AC_DEFINE(DEBUG, [1], ["Enable debugging support"])]
+      [CFLAGS="$CFLAGS -O0 -g"]
+      [CLDD_DEBUG_VALAFLAGS="-g -D DEBUG"]
+      [AS_IF([test "x$GCC" = xyes],
+             [CC_CHECK_FLAG([-g])])])
+
+AC_SUBST(CLDD_DEBUG_VALAFLAGS)
 
 dnl Additional build flags
 AS_IF([test "x$GCC" != "xno"],
@@ -161,18 +130,27 @@ AS_IF([test "x$GCC" != "xno"],
       [CC_CHECK_FLAG([-Wwrite-strings])]
       [CC_CHECK_FLAG([-pedantic])])
 
+AC_SUBST([CLDD_PLUGIN_LINKER_FLAGS],["-module -avoid-version -Wl,-z,defs"])
+AC_SUBST([CLDD_PLUGIN_DIR],[${libdir}/cldd-0.1/plugins])
+
+dnl Configuration
+AC_SUBST([pkgconfigdir])
+
 dnl Generate files
 AC_CONFIG_FILES([
 	Makefile
+	cldd-core-0.1.pc
     data/Makefile
     data/conf/Makefile
-    data/rc.d/Makefile
-    man/Makefile
+    data/units/Makefile
+	data/units/cldd.service
+	data/units/cldd_ro.socket
+	data/units/cldd_rw.socket
+    docs/man/Makefile
 	src/Makefile
 	src/cldd/Makefile
-	src/libcldd/Makefile
+	src/libcldd-core/Makefile
 	src/plugins/Makefile
-	vapi/Makefile
 ])
 AC_OUTPUT
 
@@ -193,6 +171,10 @@ AC_MSG_NOTICE([
     Debugging enabled:              $enable_debug
 
     Comedi support:                 $with_comedi
+
+    Plugins:
+
+    Arduino:                        $enable_arduino_plugin
 
     $PACKAGE will be installed in $bindir
 

@@ -1,8 +1,8 @@
 dnl cldd.m4
 dnl
-dnl Copyright 2014 Geoff Johnson
+dnl Copyright 2015 Geoff Johnson
 dnl
-dnl Useful macros borrowed from rygel.
+dnl Useful macros adapted from rygel.
 
 AC_DEFUN([CLDD_ADD_STAMP], [
     cldd_stamp_files="$cldd_stamp_files $srcdir/$1"
@@ -10,6 +10,17 @@ AC_DEFUN([CLDD_ADD_STAMP], [
 
 AC_DEFUN([CLDD_ADD_VALAFLAGS], [
     VALAFLAGS="${VALAFLAGS:+$VALAFLAGS }$1"
+])
+
+dnl CLDD_CHECK_PACKAGES(LIST-OF-PACKAGES,
+dnl   ACTION-IF-FOUND)
+dnl ---------------------------------------
+dnl Version of VALA_CHECK_PACKAGES that will only run if vala support is
+dnl enabled. Otherwise ACTION-IF-FOUND will be run.
+AC_DEFUN([CLDD_CHECK_PACKAGES], [
+    AS_IF([test "x$enable_vala" = "xyes"],
+          [VALA_CHECK_PACKAGES([$1],[$2])],
+          [$2])
 ])
 
 dnl _CLDD_ADD_PLUGIN_INTERNAL(NAME-OF-PLUGIN,

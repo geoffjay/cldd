@@ -1,4 +1,4 @@
-SUBDIRS += libcldd cldd plugins
+SUBDIRS = libcldd-core cldd plugins
 
 MAINTAINERCLEANFILES = Makefile.in
 
