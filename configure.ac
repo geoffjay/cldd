@@ -68,6 +68,7 @@ AC_SUBST([CLDD_DEPS_VALAFLAGS])
 
 dnl Header checks
 AC_HEADER_STDC
+AC_CHECK_HEADERS([signal.h])
 AC_CHECK_HEADERS([stdlib.h])
 AC_CHECK_HEADERS([valgrind/memcheck.h])
 

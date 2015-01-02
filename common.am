@@ -11,31 +11,31 @@ libclddcoredir = $(top_srcdir)/src/libcldd-core
 MAINTAINERCLEANFILES = Makefile.in
 
 CLDD_COMMON_DEFINES_CFLAGS = \
-    -DDATADIR='"$(shareddir)"' \
-    -include config.h
+	-DDATADIR='"$(shareddir)"' \
+	-include config.h
 
 CLDD_COMMON_LIBCLDD_CORE_VALAFLAGS = \
-    --vapidir=$(libclddcoredir) \
-    --pkg cldd-core-0.1
+	--vapidir=$(libclddcoredir) \
+	--pkg cldd-core-0.1
 
 CLDD_COMMON_LIBCLDD_CORE_CFLAGS = \
-    $(CLDD_COMMON_DEFINES_CFLAGS) \
-    -I$(top_builddir)/src/libcldd-core \
-    -I$(top_srcdir)/src/libcldd-core
+	$(CLDD_COMMON_DEFINES_CFLAGS) \
+	-I$(top_builddir)/src/libcldd-core \
+	-I$(top_srcdir)/src/libcldd-core
 
 CLDD_COMMON_LIBCLDD_CORE_LIBS = \
-    $(top_builddir)/src/libcldd-core/libcldd-core-0.1.la
+	$(top_builddir)/src/libcldd-core/libcldd-core-0.1.la
 
 CLDD_COMMON_CONFIG_VALAFLAGS = \
-    --vapidir=$(libclddcoredir) \
-    --pkg cldd-config
+	--vapidir=$(libclddcoredir) \
+	--pkg cldd-config
 
 # Note: This must always be the last one in *_VALAFLAGS,
 # because the -g needs to be at the end of VALAFLAGS to not break make dist.
 CLDD_COMMON_VALAFLAGS = \
-    $(CLDD_COMMON_CONFIG_VALAFLAGS) \
-    $(CLDD_COMMON_VALAFLAGS_PKG) \
-    $(CLDD_DEBUG_VALAFLAGS)
+	$(CLDD_COMMON_CONFIG_VALAFLAGS) \
+	$(CLDD_COMMON_VALAFLAGS_PKG) \
+	$(CLDD_DEBUG_VALAFLAGS)
 
 vala-clean:
-    rm -f `find . -name "*.stamp"`
+	rm -f `find . -name "*.stamp"`

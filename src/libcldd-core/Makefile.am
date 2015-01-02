@@ -14,19 +14,23 @@ libcldd_core_0_1_la_SOURCES = \
 libcldd_core_0_1_la_VALAFLAGS = \
 	-H cldd-core.h -C --library=cldd-core-0.1 \
 	--gir=Cldd-0.1.gir \
-	--vapidir=$(srcdir) \
+	--vapidir=$(srcdir) --vapidir=$(top_srcdir)/vapi/zmq-vala \
+	--vapidir=$(top_srcdir)/vapi/comedi-vapi \
 	--pkg posix \
 	$(LIBCLDD_CORE_DEPS_VALAFLAGS) \
+	$(CLDD_COMEDI_DEPS_VALAFLAGS) \
 	$(CLDD_COMMON_VALAFLAGS)
 
 libcldd_core_0_1_la_CFLAGS = \
 	$(CLDD_COMMON_DEFINES_CFLAGS) \
+	$(CLDD_COMEDI_DEPS_CFLAGS) \
 	$(LIBCLDD_CORE_DEPS_CFLAGS) \
 	-DPLUGIN_DIR='"$(plugindir)"' \
 	-include config.h \
 	-DG_LOG_DOMAIN='"Cldd"'
 
 libcldd_core_0_1_la_LIBADD = \
+	$(CLDD_COMEDI_DEPS_LIBS) \
 	$(LIBCLDD_CORE_DEPS_LIBS)
 
 CLDD_CORE_VERSION=0:1:0

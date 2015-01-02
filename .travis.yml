@@ -1,0 +1,18 @@
+language: c
+compiler: gcc
+
+notifications:
+  email:
+    - geoff.jay@gmail.com
+
+before_install:
+  - sudo add-apt-repository ppa:vala-team/ppa -y
+  - sudo apt-get update -qq
+  - sudo apt-get install -qq libglib2.0-dev libgee-0.8-dev libxml2-dev
+    libcomedi-dev valac-0.22 libgirepository1.0-dev
+
+script:
+  - git submodule init
+  - git submodule update
+  - ./autogen.sh --enable-comedi
+  - make

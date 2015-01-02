@@ -1348,6 +1348,7 @@ AC_DEFUN([AM_PROG_VALAC],
     fi])
 
 m4_include([m4/cc_check_cflag.m4])
+m4_include([m4/cldd.m4])
 m4_include([m4/default_paths.m4])
 m4_include([m4/libtool.m4])
 m4_include([m4/ltoptions.m4])
@@ -1355,3 +1356,4 @@ m4_include([m4/ltsugar.m4])
 m4_include([m4/ltversion.m4])
 m4_include([m4/lt~obsolete.m4])
 m4_include([m4/pkg.m4])
+m4_include([m4/vala.m4])

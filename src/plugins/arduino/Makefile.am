@@ -8,7 +8,7 @@ libcldd_arduino_la_SOURCES = \
 
 libcldd_arduino_la_VALAFLAGS = \
 	--target-glib=2.38 \
-	--vapidir=$(top_srcdir)/vapi \
+	--vapidir=$(top_srcdir)/vapi --vapidir=$(top_srcdir)/vapi/zmq-vala \
 	$(CLDD_PLUGIN_COMMON_VALAFLAGS) \
 	$(CLDD_COMMON_LIBCLDD_CORE_VALAFLAGS) \
 	$(CLDD_COMMON_VALAFLAGS)

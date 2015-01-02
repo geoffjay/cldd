@@ -3,7 +3,7 @@
  */
 
 [CCode (cheader_filename = "config.h")]
-namespace Cldd.Config {
+namespace Cldd.BuildConfig {
 
     /* Package information */
 

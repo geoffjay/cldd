@@ -3,35 +3,31 @@ include $(top_srcdir)/common.am
 bin_PROGRAMS = cldd
 
 cldd_VALAFLAGS = \
-	--target-glib=2.32 \
+	--enable-experimental --target-glib=2.32 \
 	-H $(srcdir)/libcldd.h -C -c --thread \
-	--vapidir=$(srcdir)/../vapi \
+	--vapidir=$(top_srcdir)/vapi/zmq-vala \
+	--vapidir=$(top_srcdir)/vapi/comedi-vapi \
 	--pkg posix --pkg linux \
-	$(CLDD_DEPS_VALAFLAGS)
+	$(CLDD_DEPS_VALAFLAGS) \
+	$(CLDD_COMEDI_DEPS_VALAFLAGS) \
+	$(CLDD_COMMON_LIBCLDD_CORE_VALAFLAGS) \
+	$(CLDD_COMMON_VALAFLAGS)
 
 cldd_CFLAGS = \
+	$(SYSTEMD_CFLAGS) \
 	--include config.h \
 	-DG_LOG_DOMAIN='"Cldd"' \
+	-D_GNU_SOURCE \
 	-DLOCALEDIR=\""$(datadir)/locale"\" \
-	$(AM_CFLAGS) \
-	$(SYSTEMD_CFLAGS) \
-	$(GLIB_CFLAGS) \
-	$(GIO_CFLAGS) \
-	$(GEE_CFLAGS) \
-	$(CLD_CFLAGS) \
-	$(XML_CFLAGS) \
-	$(COMEDI_CFLAGS) \
-	$(ZMQ_CFLAGS)
+	$(CLDD_DEPS_CFLAGS) \
+	$(CLDD_COMEDI_CFLAGS) \
+	$(CLDD_COMMON_LIBCLDD_CORE_CFLAGS)
 
 cldd_LDADD = \
 	$(SYSTEMD_LIBS) \
-	$(GLIB_LIBS) \
-	$(GIO_LIBS) \
-	$(GEE_LIBS) \
-	$(CLD_LIBS) \
-	$(XML_LIBS) \
-	$(COMEDI_LIBS) \
-	$(ZMQ_LIBS)
+	$(CLDD_DEPS_LIBS) \
+	$(CLDD_COMEDI_DEPS_LIBS) \
+	$(CLDD_COMMON_LIBCLDD_CORE_LIBS)
 
 cldd_headers = \
 	cldd.h \
@@ -83,8 +79,7 @@ maintainer-clean:
 	-make clean
 	-rm -rf autom4te.cache configure config.status config.log \
 		config.h config.h.in config.h.in~ stamp-h1 aclocal.m4 \
-		build-aux Makefile.in Makefile Config.mk \
-		units/*.service units/*.socket
+		Makefile.in Makefile units/*.service units/*.socket
 
 dist-clean:
 	-make maintainer-clean

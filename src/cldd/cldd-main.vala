@@ -17,7 +17,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-using Config;
 using ZMQ;
 
 public class Cldd.Application : GLib.Object {
@@ -69,7 +68,7 @@ public class Cldd.Application : GLib.Object {
         daemon = new Daemon ();
 
         try {
-            var opt_context = new OptionContext (PACKAGE_NAME);
+            var opt_context = new OptionContext (BuildConfig.PACKAGE_NAME);
             opt_context.set_help_enabled (true);
             opt_context.add_main_entries (options, null);
             opt_context.parse (ref args);
@@ -80,7 +79,7 @@ public class Cldd.Application : GLib.Object {
         }
 
         if (version) {
-            stdout.printf ("%s\n", PACKAGE_VERSION);
+            stdout.printf ("%s\n", BuildConfig.PACKAGE_VERSION);
         } else {
 
             /* Check if we are called with -k parameter */
@@ -88,12 +87,9 @@ public class Cldd.Application : GLib.Object {
                 /* Kill using SIGINT */
                 return daemon.interrupt ();
             } else {
-                /* Setup CLD */
-                Cld.init (args);
-
                 /* If no configuration file was given use the system one */
                 if (cfgfile == null) {
-                    cfgfile = Path.build_filename (DATADIR, "cldd.xml");
+                    cfgfile = Path.build_filename (BuildConfig.DATADIR, "cldd.xml");
                 }
 
                 config = new Cldd.Config (cfgfile);

@@ -1,3 +1,6 @@
 [submodule "vapi/zmq-vala"]
 	path = vapi/zmq-vala
 	url = https://github.com/geoffjay/zmq-vala
+[submodule "vapi/comedi-vapi"]
+	path = vapi/comedi-vapi
+	url = https://github.com/geoffjay/comedi-vapi.git
