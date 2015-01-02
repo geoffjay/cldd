@@ -1,4 +1,4 @@
-# cldd [![Build Status](https://travis-ci.org/goeffjay/cldd.svg?branch=develop)][3]
+# cldd [![Build Status](https://travis-ci.org/geoffjay/cldd.svg?branch=develop)][3]
 
 Control Logging and Data Acquisition Daemon
 
