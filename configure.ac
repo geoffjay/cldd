@@ -26,7 +26,7 @@ dnl Initialize libtool - disable generation of static libraries
 LT_PREREQ([2.2.6])
 LT_INIT([dlopen disable-static])
 
-GOBJECT_INTROSPECTION_REQUIRE([1.33.4])
+GOBJECT_INTROSPECTION_REQUIRE([0.9.0])
 
 dnl Enable silent rules is available
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
